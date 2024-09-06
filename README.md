@@ -1,6 +1,6 @@
 # Python script for image comparison
 
-The `main.py` script iterates through a given folder of images, comparing each one with a given main image.
+The `main.py` script iterates through a given folder of images, comparing each one with a given main image. The output is a percentage if similarity and a little feedback.
 This script is a variation of https://github.com/rohitanil/Image-Compare, just updated some things so it works properly.
 
 # Running the script
