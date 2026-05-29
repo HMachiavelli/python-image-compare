@@ -16,7 +16,10 @@ def main():
         print('Main image does not exist or is invalid!')
         exit()
 
+    print('Starting image comparison:', len(files), 'images found in the folder.')
+
     mainImgShape = mainImage.shape[0] * mainImage.shape[1]
+    result = []
     for filename in files:
         image = io.imread(os.path.join('images', filename), as_gray=True)
         if(image is None):
@@ -29,7 +32,16 @@ def main():
         else: # We have to resize the target image to the shape of the main one
             image = transform.resize(image, mainImage.shape, preserve_range=True)
 
-        compare(mainImage, image, filename)
+        similarity = compare(mainImage, image, filename)
+        if(similarity != False):
+            result.append(f'\nImage {filename} is {similarity:.2f}% similar to the main image.')
+        
+    if(len(result) == 0):
+        print('No similar images found.')
+    else:
+        print('Comparison results:\n')
+        for res in result:
+            print(res, f'\n')
 
 # Horizontal Flip Function
 def horizontal_flip(image):
@@ -54,37 +66,19 @@ def vertical_flip(image):
 # Comparison Function
 def compare(image1, image2, filename):
     # Calculate Structural Similarity Index
-    print('\nComparing Images (main x ', filename, '):')
     similarity = metrics.structural_similarity(image1, image2, data_range=1)
     if (similarity < 0):
-        print("\nSecond Image maybe an Inverted version of the first")
         similarity *= -1
     similarity = similarity * 100
-    print('\nSimilarity --> ', similarity, '%')
 
 	# Check if SSIM>threshold to determine if they are similar
-    if (similarity == 100):
-        print('\nThe Images are Same.')
-    elif (similarity >= 90):
-        print('\nThe Images are Identical.')
-    elif (similarity >= 75):
-        print('\nThe Images are Similar.')
-    elif (similarity >= 50):
-        print('\nThe Images are Vaguely Similar.')
-    elif (similarity >= 25):
-        print('\nThe Images are Slightly Different.')
-    elif (similarity >= 1):
-        print('\nThe Images are Dissimilar.')
-    else:
-        print('\nThe Images are Distinct.')
+    if (similarity >= 50):
+        return similarity
+
     vertical_flip_image = vertical_flip(image2)
     horizontal_flip_image = horizontal_flip(image2)
     vertical_flip_image = vertical_flip_image.astype(np.uint8)
     horizontal_flip_image = horizontal_flip_image.astype(np.uint8)
-
-    # Uncomment the following lines to save flipped images to disk.
-	# misc.imsave('HorizontalFlip.jpg', horizontal_flip_image)
-	# misc.imsave('VerticalFlip.jpg', vertical_flip_image)
 
     similarity1 = metrics.structural_similarity(horizontal_flip_image, image1, data_range=1)
     if (similarity1 < 0):
@@ -98,12 +92,12 @@ def compare(image1, image2, filename):
     difference1 = similarity1 - similarity
     difference2 = similarity2 - similarity
 
-    if(difference1 >40):
-        print('\nThe Images are most likely Horizontally Flipped.')
-        print('\nHorizontal Flip Similarity --> ', similarity1, '%')
-    if(difference2 >40):
-        print('\nThe Images are most likely Vertically Flipped.')
-        print('\nVertical Flip Similarity --> ',similarity2, '%')
+    if(difference1 > 40):
+        return similarity1
+    elif(difference2 > 40):
+        return similarity2
+        
+    return false
 
 if __name__ == '__main__':
     main()
